@@ -59,7 +59,9 @@ mod tests {
 
         let calorie_count = sort_calories(calorie_list.to_string());
 
-        assert_eq!(calorie_count[0], 24000);
+        let max = calorie_count[0];
+        assert_eq!(max, 24000);
+
         assert_eq!(calorie_count[1], 11000);
         assert_eq!(calorie_count[2], 10000);
 

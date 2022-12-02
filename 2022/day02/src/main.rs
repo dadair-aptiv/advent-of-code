@@ -6,25 +6,39 @@ fn main() {
     let contents = fs::read_to_string("input.txt")
         .expect("Can't read the input file");
 
-    let round_one = total_score(contents);
-    println!("{:?}", round_one);
-    assert_eq!(round_one, 8890);
+    // How scoring changed so no longer true
+    // let round_one = total_score(contents);
+    // println!("{:?}", round_one);
+    // assert_eq!(round_one, 8890);
+
+    let round_two = total_score(contents);
+    println!("{:?}", round_two);
+    assert_eq!(round_two, 10238);
 }
 
-fn score_round(elf: &str, you: &str) -> usize {
+fn score_round(elf: &str, round: &str) -> usize {
     let elf_play = Play::from(elf);
-    let your_play = Play::from(you);
+    let round_status = Scoring::from(round);
 
     println!("elf: {}", elf_play);
-    println!("you: {}", your_play);
+    println!("round: {}", round_status);
 
-    if your_play > elf_play {
-        return your_play.value() + Scoring::Win.value();
-    } else if your_play < elf_play {
-        return your_play.value() + Scoring::Lose.value();
-    } else {
-        return your_play.value() + Scoring::Draw.value();
-    }
+    let your_play = match round_status {
+        Scoring::Win => match elf_play {
+            Play::Rock => Play::Paper,
+            Play::Paper => Play::Scissors,
+            Play::Scissors => Play::Rock,
+        },
+        Scoring::Lose => match elf_play {
+            Play::Rock => Play::Scissors,
+            Play::Paper => Play::Rock,
+            Play::Scissors => Play::Paper,
+        },
+        Scoring::Draw => elf_play,
+    };
+
+    println!("you: {}", your_play);
+    your_play.value() + round_status.value()
 }
 
 fn total_score(list_of_plays: String) -> usize {
@@ -100,7 +114,7 @@ impl PartialOrd for Play {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 enum Scoring {
     Win,
     Lose,
@@ -115,6 +129,26 @@ impl Scoring {
             Scoring::Lose => 0,
         }
     }
+
+    fn from(letter: &str) -> Self {
+        match letter {
+            "X" => Scoring::Lose,
+            "Y" => Scoring::Draw,
+            "Z" => Scoring::Win,
+            &_ => unreachable!(),
+        }
+    }
+}
+
+impl fmt::Display for Scoring {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let score = match *self {
+            Scoring::Win => "Win".to_string(),
+            Scoring::Draw => "Draw".to_string(),
+            Scoring::Lose => "Lose".to_string(),
+        };
+        write!(f, "{} = {}", score, self.value())
+    }
 }
 
 #[cfg(test)]
@@ -122,9 +156,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_score_win() {
+    fn should_score_draw() {
         let win = score_round("A", "Y");
-        assert_eq!(win, 8);
+        assert_eq!(win, 4);
     }
 
     #[test]
@@ -134,15 +168,15 @@ mod tests {
     }
 
     #[test]
-    fn should_score_draw() {
+    fn should_score_win() {
         let draw = score_round("C", "Z");
-        assert_eq!(draw, 6);
+        assert_eq!(draw, 7);
     }
 
     #[test]
-    fn rock_beats_scissors() {
-        let loss = score_round("A", "Z");
-        assert_eq!(loss, 3);
+    fn rock_with_win() {
+        let rock = score_round("A", "Z");
+        assert_eq!(rock, 8);
     }
 
     #[test]
@@ -152,7 +186,7 @@ B X
 C Z";
 
         let score = total_score(example_scoring.to_string());
-        assert_eq!(score, 15);
+        assert_eq!(score, 12);
     }
 }
 
@@ -164,17 +198,11 @@ mod test_enums {
     fn should_create_enum_from_rock_string() {
         let rock = Play::from("A");
         assert_eq!(rock, Play::Rock);
-
-        let rock = Play::from("X");
-        assert_eq!(rock, Play::Rock);
     }
 
     #[test]
     fn should_create_enum_from_paper_string() {
         let paper = Play::from("B");
-        assert_eq!(paper, Play::Paper);
-
-        let paper = Play::from("Y");
         assert_eq!(paper, Play::Paper);
     }
 
@@ -182,9 +210,24 @@ mod test_enums {
     fn should_create_enum_from_scissors_string() {
         let scissors = Play::from("C");
         assert_eq!(scissors, Play::Scissors);
+    }
 
-        let scissors = Play::from("Z");
-        assert_eq!(scissors, Play::Scissors);
+    #[test]
+    fn should_create_enum_from_lose_string() {
+        let loss = Scoring::from("X");
+        assert_eq!(loss, Scoring::Lose);
+    }
+
+    #[test]
+    fn should_create_enum_from_draw_string() {
+        let draw = Scoring::from("Y");
+        assert_eq!(draw, Scoring::Draw);
+    }
+
+    #[test]
+    fn should_create_enum_from_win_string() {
+        let win = Scoring::from("Z");
+        assert_eq!(win, Scoring::Win);
     }
 
     #[test]

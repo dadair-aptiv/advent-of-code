@@ -63,9 +63,9 @@ enum Play {
 impl Play {
     fn from(letter: &str) -> Self {
         match letter {
-            "A" | "X" => Play::Rock,
-            "B" | "Y" => Play::Paper,
-            "C" | "Z" => Play::Scissors,
+            "A" => Play::Rock,
+            "B" => Play::Paper,
+            "C" => Play::Scissors,
             &_ => unreachable!(),
         }
     }
